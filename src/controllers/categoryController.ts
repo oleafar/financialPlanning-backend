@@ -1,6 +1,12 @@
 import { Request, Response } from 'express';
 import { categories } from '../store';
-import { Category } from '../types';
+import { Category, CategoryType } from '../types';
+
+function isDuplicateCategory(name: string, type: CategoryType, excludeId?: string): boolean {
+  return Array.from(categories.values()).some(
+    (c) => c.name.toLowerCase() === name.toLowerCase() && c.type === type && c.id !== excludeId
+  );
+}
 
 export function getCategories(req: Request, res: Response): void {
   const result = Array.from(categories.values());
@@ -10,19 +16,16 @@ export function getCategories(req: Request, res: Response): void {
 
 export function createCategory(req: Request, res: Response): void {
   const { name, type } = req.body;
+  const trimmedName = (name as string).trim();
 
-  const duplicate = Array.from(categories.values()).find(
-    (c) => c.name.toLowerCase() === name.trim().toLowerCase() && c.type === type
-  );
-
-  if (duplicate) {
-    res.status(409).json({ error: `Category "${name}" with type "${type}" already exists` });
+  if (isDuplicateCategory(trimmedName, type as CategoryType)) {
+    res.status(409).json({ error: `Category "${trimmedName}" with type "${type}" already exists` });
     return;
   }
 
   const category: Category = {
     id: crypto.randomUUID(),
-    name: name.trim(),
+    name: trimmedName,
     type,
     createdAt: new Date().toISOString(),
   };
@@ -43,11 +46,8 @@ export function updateCategory(req: Request, res: Response): void {
   const { name, type } = req.body;
 
   if (name !== undefined) {
-    const targetType = type !== undefined ? type : existing.type;
-    const duplicate = Array.from(categories.values()).find(
-      (c) => c.id !== id && c.name.toLowerCase() === name.trim().toLowerCase() && c.type === targetType
-    );
-    if (duplicate) {
+    const targetType: CategoryType = type !== undefined ? (type as CategoryType) : existing.type;
+    if (isDuplicateCategory((name as string).trim(), targetType, id)) {
       res.status(409).json({ error: `Category "${name}" with type "${targetType}" already exists` });
       return;
     }
