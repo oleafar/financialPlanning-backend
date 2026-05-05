@@ -12,7 +12,7 @@ export function getTransactions(req: Request, res: Response): void {
   }
 
   if (category) {
-    // Case-insensitive match so "food" and "Food" both return the same results
+    // Both the stored category and the filter parameter are normalized to lowercase for case-insensitive comparison
     result = result.filter((t) => t.category.toLowerCase() === category.toLowerCase());
   }
 
