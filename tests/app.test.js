@@ -18,6 +18,15 @@ describe("financial planning backend", () => {
     await resetDatabase();
   });
 
+  it("serves swagger documentation", async () => {
+    const response = await request(app).get("/docs.json");
+
+    expect(response.statusCode).toBe(200);
+    expect(response.body.openapi).toBe("3.0.3");
+    expect(response.body.paths["/api/auth/register"]).toBeTruthy();
+    expect(response.body.paths["/api/reports/by-period"]).toBeTruthy();
+  });
+
   it("registers, authenticates, creates money flows, and returns reports", async () => {
     const registerResponse = await request(app).post("/api/auth/register").send({
       name: "Rafael",

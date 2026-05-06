@@ -37,6 +37,10 @@ npm run dev
 
 API base URL: `http://localhost:3000/api`
 
+Swagger UI: `http://localhost:3000/docs`
+
+OpenAPI JSON: `http://localhost:3000/docs.json`
+
 ## Environment
 
 ```env
@@ -57,6 +61,15 @@ JWT_SECRET="change-me-in-production"
 - `GET /api/reports/summary`
 - `GET /api/reports/by-category`
 - `GET /api/reports/by-period`
+
+## API Documentation
+
+The project exposes Swagger/OpenAPI documentation for all routes.
+
+- Interactive UI: `GET /docs`
+- Raw OpenAPI spec: `GET /docs.json`
+
+Protected endpoints use Bearer JWT authentication. In Swagger UI, use the `Authorize` button and send the token as `Bearer <token>`.
 
 ## Scripts
 
