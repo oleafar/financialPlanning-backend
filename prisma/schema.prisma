@@ -1,0 +1,98 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+enum TransactionType {
+  income
+  expense
+}
+
+enum WalletType {
+  bank
+  cash
+  digital
+  other
+}
+
+model User {
+  id           String        @id @default(cuid())
+  name         String
+  email        String        @unique
+  password     String
+  createdAt    DateTime      @default(now())
+  wallets      Wallet[]
+  categories   Category[]
+  transactions Transaction[]
+  transfers    Transfer[]
+}
+
+model Wallet {
+  id                 String        @id @default(cuid())
+  name               String
+  type               WalletType
+  balance            Float         @default(0)
+  userId             String
+  createdAt          DateTime      @default(now())
+  updatedAt          DateTime      @updatedAt
+  user               User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  transactions       Transaction[]
+  outgoingTransfers  Transfer[]    @relation("FromWallet")
+  incomingTransfers  Transfer[]    @relation("ToWallet")
+
+  @@index([userId])
+}
+
+model Category {
+  id           String          @id @default(cuid())
+  name         String
+  type         TransactionType
+  userId       String
+  createdAt    DateTime        @default(now())
+  updatedAt    DateTime        @updatedAt
+  user         User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  transactions Transaction[]
+
+  @@unique([name, type, userId])
+  @@index([userId])
+}
+
+model Transaction {
+  id         String          @id @default(cuid())
+  title      String
+  amount     Float
+  type       TransactionType
+  date       DateTime
+  categoryId String
+  walletId   String
+  userId     String
+  createdAt  DateTime        @default(now())
+  updatedAt  DateTime        @updatedAt
+  category   Category        @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+  wallet     Wallet          @relation(fields: [walletId], references: [id], onDelete: Restrict)
+  user       User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, date])
+  @@index([walletId])
+  @@index([categoryId])
+}
+
+model Transfer {
+  id           String   @id @default(cuid())
+  fromWalletId String
+  toWalletId   String
+  amount       Float
+  date         DateTime
+  userId       String
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  fromWallet   Wallet   @relation("FromWallet", fields: [fromWalletId], references: [id], onDelete: Restrict)
+  toWallet     Wallet   @relation("ToWallet", fields: [toWalletId], references: [id], onDelete: Restrict)
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, date])
+}
